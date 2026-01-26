@@ -146,12 +146,14 @@ def cir_zcb_option(
         term2 = K * P_0_Tcall * ncx2.cdf(2 * r_hat * (phi + psi), df, nc_centrality / (phi + psi))
         return term1 - term2
     elif option_type.lower() == 'put':
-        # Put-call parity implementation
+        # Corrected CIR Put formula based on symmetry of the chi-square CDF
         term1 = K * P_0_Tcall * ncx2.cdf(2 * r_hat * (phi + psi), df, nc_centrality / (phi + psi))
         term2 = P_0_T * ncx2.cdf(2 * r_hat * xi, df, nc_centrality / xi)
-        return term1 - term2 + (K * P_0_Tcall - P_0_T)
-    else:
-        raise ValueError("option_type must be 'call' or 'put'")
+        
+        # In a Put, we reverse the probabilities compared to a Call
+        price = K * P_0_Tcall * (1 - ncx2.cdf(2 * r_hat * (phi + psi), df, nc_centrality / (phi + psi))) - \
+                P_0_T * (1 - ncx2.cdf(2 * r_hat * xi, df, nc_centrality / xi))
+        return price
     
 
     

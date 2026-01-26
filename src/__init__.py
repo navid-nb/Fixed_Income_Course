@@ -14,8 +14,16 @@ from .Cox_Ingersoll_Ross import (
     cir_coupon_bond_option,
 )
 
+from .Hull_White import (
+    hull_white_zcb,
+    hull_white_coupon_bond,
+    hull_white_zcb_option,
+    hull_white_coupon_bond_option,
+)
+
 
 
 __all__ = ['calculate_nss', 'vasicek_zcb', 'vasicek_coupon_bond', 'vasicek_zcb_option',
             'vasicek_coupon_bond_option', 'cir_zcb', 'cir_coupon_bond', 'cir_zcb_option',
-              'cir_coupon_bond_option']
+              'cir_coupon_bond_option', 'hull_white_zcb', 'hull_white_coupon_bond', 'hull_white_zcb_option',
+                'hull_white_coupon_bond_option']

@@ -24,7 +24,7 @@ def cir_zero_coupon_price(
     theta: float,
     sigma: float,
 ) -> np.ndarray | float:
-    """CIR zero-coupon bond price using the closed form from the handout.
+    """CIR zero-coupon bond price using the closed form from the lecture notes.
 
     P_cir(t, T) = a_cir(t, T) * exp(-b_cir(t, T) * r_t)
 
@@ -257,6 +257,8 @@ def explicit_cir_put_on_bond_premiums_bps(
 
     def vol_fn(r_vals: np.ndarray) -> np.ndarray:
         # CIR diffusion coefficient evaluated pointwise on the rate grid.
+        if np.any(r_vals < 0.0):
+            raise ValueError("Negative rates observed clipping to zero for volatility calculation")
         return sigma * np.sqrt(np.maximum(r_vals, 0.0))
 
     def terminal_payoff_fn(r_vals: np.ndarray) -> np.ndarray:
@@ -264,19 +266,34 @@ def explicit_cir_put_on_bond_premiums_bps(
         bond_at_expiry = cir_zero_coupon_price(option_maturity, bond_maturity, r_vals, kappa, theta, sigma)
         return np.maximum(strike - bond_at_expiry, 0.0)
 
+    # Boundary constants from the notes' put setup (evaluated at t=0):
+    # g_0^t = max(0, K*P(0,T_opt,0) - P(0,T_bond,0))
+    # g_N^t = max(0, K*P(0,T_opt,r_max) - P(0,T_bond,r_max)).
+    left_boundary_const = max(
+        strike * float(cir_zero_coupon_price(0.0, option_maturity, 0.0, kappa, theta, sigma))
+        - float(cir_zero_coupon_price(0.0, bond_maturity, 0.0, kappa, theta, sigma)),
+        0.0,
+    )
+    right_boundary_const = max(
+        strike * float(cir_zero_coupon_price(0.0, option_maturity, r_max, kappa, theta, sigma))
+        - float(cir_zero_coupon_price(0.0, bond_maturity, r_max, kappa, theta, sigma)),
+        0.0,
+    )
+
     def lower_boundary_fn(t_now: float) -> float:
-        # At r = 0 the bond is most valuable, so the put is at its lowest value.
-        bond_at_zero_rate = float(cir_zero_coupon_price(t_now, bond_maturity, 0.0, kappa, theta, sigma))
-        return max(strike - bond_at_zero_rate, 0.0)
+        # Put boundary from the notes image, constant through backward time steps.
+        _ = t_now
+        return left_boundary_const
 
     def upper_boundary_eur_fn(t_now: float) -> float:
-        # At high rates the ZCB is nearly worthless, so the European put is
-        # approximately the discounted strike at option maturity.
-        return strike * float(cir_zero_coupon_price(t_now, option_maturity, r_max, kappa, theta, sigma))
+        # Put boundary from the notes image, constant through backward time steps.
+        _ = t_now
+        return right_boundary_const
 
-    def upper_boundary_am_fn(_: float) -> float:
-        # For the American put, immediate exercise makes the upper boundary K.
-        return strike
+    def upper_boundary_am_fn(t_now: float) -> float:
+        # Same right-edge boundary used in the notes for both Euro and American grids.
+        _ = t_now
+        return right_boundary_const
 
     def exercise_value_fn(t_now: float, r_vals: np.ndarray) -> np.ndarray:
         # Intrinsic value used for the American early-exercise comparison.

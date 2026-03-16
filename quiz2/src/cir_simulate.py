@@ -11,6 +11,12 @@ def _box_muller_normals(size: int, seed: int) -> np.ndarray:
     if isinstance(seed, bool) or not isinstance(seed, int):
         raise ValueError("seed must be an integer")
 
+    # Optional consistency test path using Python's standard-library RNG.
+    # Keep this block commented unless you explicitly want random.Random().
+    # import random
+    # py_rng = random.Random(seed)
+    # return np.array([py_rng.gauss(0.0, 1.0) for _ in range(size)], dtype=float)
+
     rng = np.random.default_rng(seed)
     return rng.standard_normal(size)
 

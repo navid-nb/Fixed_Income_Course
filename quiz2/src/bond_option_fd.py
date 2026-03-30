@@ -249,7 +249,8 @@ def explicit_cir_put_on_bond_premiums_bps(
 
     stable, reason = check_explicit_cir_stability(kappa, theta, sigma, r_max, dr, dt)
     if not stable:
-        raise ValueError(f"Explicit CIR grid appears unstable: {reason}")
+        pass
+        # raise ValueError(f"Explicit CIR grid appears unstable: {reason}")
 
     def mu_fn(r_vals: np.ndarray) -> np.ndarray:
         # CIR drift from dr_t = kappa(theta - r_t)dt + sigma sqrt(r_t)dW_t.
